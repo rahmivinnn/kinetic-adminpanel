@@ -69,12 +69,8 @@ const Sidebar: React.FC<SidebarProps> = ({
   const handleItemClick = (itemId: string) => {
     console.log('Sidebar item clicked:', itemId); // Debug log
     
-    // Prevent default behavior and ensure click is handled
-    if (itemId === 'settings') {
-      onSettings();
-    } else {
-      onPageChange(itemId);
-    }
+    // Navigate to the selected page
+    onPageChange(itemId);
   };
 
   return (

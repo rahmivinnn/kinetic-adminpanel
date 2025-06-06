@@ -418,7 +418,11 @@ const AdminDashboard = () => (
               <Calendar className="w-6 h-6" />
               <span className="text-sm">Schedule</span>
             </Button>
-            <Button variant="outline" className="h-20 flex flex-col space-y-2 hover:bg-blue-50 hover:border-blue-300 transition-all">
+            <Button 
+              variant="outline" 
+              className="h-20 flex flex-col space-y-2 hover:bg-blue-50 hover:border-blue-300 transition-all"
+              onClick={() => handlePageChange('settings')}
+            >
               <span className="text-2xl">⚙️</span>
               <span className="text-sm">Settings</span>
             </Button>
