@@ -18,7 +18,9 @@ import {
   Timer,
   Repeat,
   Award,
-  Activity
+  Activity,
+  X,
+  Save
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,6 +28,12 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 
 interface Exercise {
   id: string;
@@ -235,7 +243,7 @@ const mockWorkoutPlans: WorkoutPlan[] = [
     id: '3',
     name: 'Balance & Stability',
     description: 'Improve balance and prevent falls',
-    exercises: ['3', '6'],
+    exercises: ['3', '5'],
     estimatedDuration: 25,
     difficulty: 'intermediate',
     category: 'balance',
@@ -244,12 +252,24 @@ const mockWorkoutPlans: WorkoutPlan[] = [
 ];
 
 const Exercises: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('exercises');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [selectedDifficulty, setSelectedDifficulty] = useState('all');
   const [exercises, setExercises] = useState<Exercise[]>(mockExercises);
   const [workoutPlans, setWorkoutPlans] = useState<WorkoutPlan[]>(mockWorkoutPlans);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [showCreateWorkout, setShowCreateWorkout] = useState(false);
+  const [showExerciseGuide, setShowExerciseGuide] = useState(false);
+  const [newWorkout, setNewWorkout] = useState({
+    name: '',
+    description: '',
+    difficulty: 'beginner',
+    category: 'general',
+    selectedExercises: [] as string[]
+  });
+
   const [filterCategory, setFilterCategory] = useState<string>('all');
   const [filterDifficulty, setFilterDifficulty] = useState<string>('all');
-  const [activeTab, setActiveTab] = useState('exercises');
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -283,7 +303,8 @@ const Exercises: React.FC = () => {
 
   const filteredExercises = exercises.filter(exercise => {
     const matchesSearch = exercise.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         exercise.description.toLowerCase().includes(searchTerm.toLowerCase());
+                         exercise.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         exercise.targetMuscles.some(muscle => muscle.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory = filterCategory === 'all' || exercise.category === filterCategory;
     const matchesDifficulty = filterDifficulty === 'all' || exercise.difficulty === filterDifficulty;
     
@@ -323,12 +344,19 @@ const Exercises: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Exercise Library</h1>
           <p className="text-gray-600">Personalized rehabilitation exercises and workout plans</p>
         </div>
-        <div className="flex gap-3">
-          <Button className="bg-blue-500 hover:bg-blue-600 text-white">
+        <div className="flex gap-4">
+          <Button 
+            onClick={handleCreateWorkout}
+            className="bg-blue-600 hover:bg-blue-700 text-white"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Create Workout
           </Button>
-          <Button variant="outline">
+          <Button 
+            onClick={handleExerciseGuide}
+            variant="outline" 
+            className="border-blue-600 text-blue-600 hover:bg-blue-50"
+          >
             <BookOpen className="w-4 h-4 mr-2" />
             Exercise Guide
           </Button>
@@ -621,3 +649,301 @@ const Exercises: React.FC = () => {
 };
 
 export default Exercises;
+
+  // Handler functions for buttons
+  const handleCreateWorkout = () => {
+    setShowCreateWorkout(true);
+    toast.success('🏋️ Create Workout Dialog Opened!', {
+      description: 'Design your custom workout plan',
+      duration: 3000
+    });
+  };
+
+  const handleExerciseGuide = () => {
+    setShowExerciseGuide(true);
+    toast.success('📖 Exercise Guide Opened!', {
+      description: 'Learn proper exercise techniques',
+      duration: 3000
+    });
+  };
+
+  const handleStartWorkout = (planId: string) => {
+    const plan = workoutPlans.find(p => p.id === planId);
+    if (plan) {
+      toast.success('🚀 Workout Started!', {
+        description: `Starting ${plan.name} - ${plan.estimatedDuration} minutes`,
+        duration: 3000
+      });
+    }
+  };
+
+  const handleVideoPlay = (exerciseId: string) => {
+    const exercise = exercises.find(e => e.id === exerciseId);
+    if (exercise) {
+      toast.success('🎥 Video Player Opened!', {
+        description: `Playing: ${exercise.name}`,
+        duration: 3000
+      });
+    }
+  };
+
+  const handleSaveWorkout = () => {
+    if (!newWorkout.name.trim()) {
+      toast.error('❌ Workout name is required');
+      return;
+    }
+    if (newWorkout.selectedExercises.length === 0) {
+      toast.error('❌ Please select at least one exercise');
+      return;
+    }
+
+    const workout: WorkoutPlan = {
+      id: `workout_${Date.now()}`,
+      name: newWorkout.name,
+      description: newWorkout.description,
+      exercises: newWorkout.selectedExercises,
+      estimatedDuration: newWorkout.selectedExercises.length * 10, // Estimate 10 min per exercise
+      difficulty: newWorkout.difficulty as 'beginner' | 'intermediate' | 'advanced',
+      category: newWorkout.category,
+      isActive: false
+    };
+
+    setWorkoutPlans(prev => [...prev, workout]);
+    setShowCreateWorkout(false);
+    setNewWorkout({
+      name: '',
+      description: '',
+      difficulty: 'beginner',
+      category: 'general',
+      selectedExercises: []
+    });
+
+    toast.success('✅ Workout Created Successfully!', {
+      description: `${workout.name} has been added to your workout plans`,
+      duration: 3000
+    });
+  };
+
+      {/* Create Workout Modal */}
+      <Dialog open={showCreateWorkout} onOpenChange={setShowCreateWorkout}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="w-5 h-5" />
+              Create New Workout Plan
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="workout-name">Workout Name</Label>
+                <Input
+                  id="workout-name"
+                  value={newWorkout.name}
+                  onChange={(e) => setNewWorkout(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Enter workout name"
+                />
+              </div>
+              <div>
+                <Label htmlFor="workout-difficulty">Difficulty</Label>
+                <Select value={newWorkout.difficulty} onValueChange={(value) => setNewWorkout(prev => ({ ...prev, difficulty: value }))}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="beginner">Beginner</SelectItem>
+                    <SelectItem value="intermediate">Intermediate</SelectItem>
+                    <SelectItem value="advanced">Advanced</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="workout-description">Description</Label>
+              <Textarea
+                id="workout-description"
+                value={newWorkout.description}
+                onChange={(e) => setNewWorkout(prev => ({ ...prev, description: e.target.value }))}
+                placeholder="Describe your workout plan"
+                rows={3}
+              />
+            </div>
+            <div>
+              <Label>Select Exercises</Label>
+              <div className="grid grid-cols-1 gap-2 max-h-60 overflow-y-auto border rounded-md p-4">
+                {exercises.map((exercise) => (
+                  <div key={exercise.id} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={exercise.id}
+                      checked={newWorkout.selectedExercises.includes(exercise.id)}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setNewWorkout(prev => ({
+                            ...prev,
+                            selectedExercises: [...prev.selectedExercises, exercise.id]
+                          }));
+                        } else {
+                          setNewWorkout(prev => ({
+                            ...prev,
+                            selectedExercises: prev.selectedExercises.filter(id => id !== exercise.id)
+                          }));
+                        }
+                      }}
+                    />
+                    <Label htmlFor={exercise.id} className="flex-1 cursor-pointer">
+                      {exercise.name} - {exercise.targetMuscles.join(', ')}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowCreateWorkout(false)}>
+                <X className="w-4 h-4 mr-2" />
+                Cancel
+              </Button>
+              <Button onClick={handleSaveWorkout} className="bg-blue-600 hover:bg-blue-700">
+                <Save className="w-4 h-4 mr-2" />
+                Save Workout
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Exercise Guide Modal */}
+      <Dialog open={showExerciseGuide} onOpenChange={setShowExerciseGuide}>
+        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BookOpen className="w-5 h-5" />
+              Exercise Guide & Techniques
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {exercises.map((exercise) => (
+                <Card key={exercise.id} className="border border-gray-200">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center justify-between">
+                      {exercise.name}
+                      <Badge variant={exercise.difficulty === 'beginner' ? 'secondary' : exercise.difficulty === 'intermediate' ? 'default' : 'destructive'}>
+                        {exercise.difficulty}
+                      </Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600 mb-2"><strong>Target Muscles:</strong> {exercise.targetMuscles.join(', ')}</p>
+                      <p className="text-sm text-gray-600 mb-2"><strong>Duration:</strong> {exercise.duration} minutes</p>
+                      <p className="text-sm text-gray-700">{exercise.description}</p>
+                    </div>
+                    <div className="space-y-2">
+                      <h4 className="font-semibold text-sm">Instructions:</h4>
+                      <ol className="text-sm text-gray-600 space-y-1">
+                        {exercise.instructions.map((instruction, index) => (
+                          <li key={index}>{index + 1}. {instruction}</li>
+                        ))}
+                      </ol>
+                    </div>
+                    <Button 
+                      onClick={() => handleVideoPlay(exercise.id)}
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full"
+                    >
+                      <Video className="w-4 h-4 mr-2" />
+                      Watch Demo Video
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+            <div className="flex justify-end">
+              <Button variant="outline" onClick={() => setShowExerciseGuide(false)}>
+                <X className="w-4 h-4 mr-2" />
+                Close Guide
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </motion.div>
+  );
+};
+
+export default Exercises;
+
+  // Handler functions for buttons
+  const handleCreateWorkout = () => {
+    setShowCreateWorkout(true);
+    toast.success('🏋️ Create Workout Dialog Opened!', {
+      description: 'Design your custom workout plan',
+      duration: 3000
+    });
+  };
+
+  const handleExerciseGuide = () => {
+    setShowExerciseGuide(true);
+    toast.success('📖 Exercise Guide Opened!', {
+      description: 'Learn proper exercise techniques',
+      duration: 3000
+    });
+  };
+
+  const handleStartWorkout = (planId: string) => {
+    const plan = workoutPlans.find(p => p.id === planId);
+    if (plan) {
+      toast.success('🚀 Workout Started!', {
+        description: `Starting ${plan.name} - ${plan.estimatedDuration} minutes`,
+        duration: 3000
+      });
+    }
+  };
+
+  const handleVideoPlay = (exerciseId: string) => {
+    const exercise = exercises.find(e => e.id === exerciseId);
+    if (exercise) {
+      toast.success('🎥 Video Player Opened!', {
+        description: `Playing: ${exercise.name}`,
+        duration: 3000
+      });
+    }
+  };
+
+  const handleSaveWorkout = () => {
+    if (!newWorkout.name.trim()) {
+      toast.error('❌ Workout name is required');
+      return;
+    }
+    if (newWorkout.selectedExercises.length === 0) {
+      toast.error('❌ Please select at least one exercise');
+      return;
+    }
+
+    const workout: WorkoutPlan = {
+      id: `workout_${Date.now()}`,
+      name: newWorkout.name,
+      description: newWorkout.description,
+      exercises: newWorkout.selectedExercises,
+      estimatedDuration: newWorkout.selectedExercises.length * 10, // Estimate 10 min per exercise
+      difficulty: newWorkout.difficulty as 'beginner' | 'intermediate' | 'advanced',
+      category: newWorkout.category,
+      isActive: false
+    };
+
+    setWorkoutPlans(prev => [...prev, workout]);
+    setShowCreateWorkout(false);
+    setNewWorkout({
+      name: '',
+      description: '',
+      difficulty: 'beginner',
+      category: 'general',
+      selectedExercises: []
+    });
+
+    toast.success('✅ Workout Created Successfully!', {
+      description: `${workout.name} has been added to your workout plans`,
+      duration: 3000
+    });
+  };
