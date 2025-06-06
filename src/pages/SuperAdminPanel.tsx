@@ -174,22 +174,22 @@ const SuperAdminPanel = () => {
     setRefreshing(true);
     await new Promise(resolve => setTimeout(resolve, 2000));
     setRefreshing(false);
-    toast.success('🔄 Data berhasil diperbarui!', {
-      description: 'Semua data telah disinkronkan dengan server',
+    toast.success('🔄 Data updated successfully!', {
+      description: 'All data has been synchronized with the server',
       duration: 3000
     });
   };
 
   const handleExport = () => {
-    toast.success('📊 Export dimulai!', {
-      description: 'File akan diunduh dalam beberapa detik',
+    toast.success('📊 Export started!', {
+      description: 'File will be downloaded in a few seconds',
       duration: 3000
     });
   };
 
   const handleAddUser = () => {
     toast.success('👤 Add User dialog opened!', {
-      description: 'Form untuk menambah pengguna baru akan ditampilkan',
+      description: 'Form to add new user will be displayed',
       duration: 3000
     });
   };

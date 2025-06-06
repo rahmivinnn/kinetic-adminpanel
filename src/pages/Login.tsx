@@ -116,16 +116,16 @@ const Login = () => {
     try {
       // Validasi form
       if (signupForm.password !== signupForm.confirmPassword) {
-        toast.error('❌ Password tidak cocok', {
-          description: 'Pastikan password dan konfirmasi password sama',
+        toast.error('❌ Password mismatch', {
+          description: 'Make sure password and confirm password are the same',
           duration: 4000
         });
         return;
       }
 
       if (!signupForm.acceptTerms) {
-        toast.error('❌ Syarat dan Ketentuan', {
-          description: 'Anda harus menyetujui syarat dan ketentuan',
+        toast.error('❌ Terms and Conditions', {
+          description: 'You must agree to the terms and conditions',
           duration: 4000
         });
         return;
@@ -137,8 +137,8 @@ const Login = () => {
       // Simulasi pendaftaran berhasil
       const newUserId = Math.random().toString(36).substr(2, 9);
       
-      toast.success('🎉 Pendaftaran Berhasil!', {
-        description: `Akun ${signupForm.role} telah dibuat. Silakan login.`,
+      toast.success('🎉 Registration Successful!', {
+        description: `${signupForm.role} account has been created. Please login.`,
         duration: 4000
       });
 
@@ -156,8 +156,8 @@ const Login = () => {
       setActiveTab('login');
 
     } catch (error) {
-      toast.error('❌ Pendaftaran Gagal', {
-        description: 'Silakan coba lagi dalam beberapa saat',
+      toast.error('❌ Registration Failed', {
+        description: 'Please try again in a few moments',
         duration: 4000
       });
     } finally {

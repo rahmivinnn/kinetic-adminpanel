@@ -509,7 +509,7 @@ const DataManagement = () => {
 
   const handleBulkAction = (action: string) => {
     if (selectedItems.length === 0) {
-      toast.error('❌ Tidak ada item yang dipilih');
+      toast.error('❌ No items selected');
       return;
     }
 
